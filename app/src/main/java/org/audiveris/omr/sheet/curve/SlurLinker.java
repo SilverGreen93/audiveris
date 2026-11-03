@@ -159,7 +159,11 @@ public class SlurLinker
 
         Part part = staff.getPart();
         Measure sideMeasure = (side == LEFT) ? part.getFirstMeasure() : part.getLastMeasure();
-        Measure endMeasure = part.getMeasureAt(slurEnd);
+        // The slur end may lie beyond the staff end, and above or below the staff
+        final double xIn = Math.max(
+                staff.getAbscissa(LEFT),
+                Math.min(staff.getAbscissa(RIGHT), slurEnd.getX()));
+        Measure endMeasure = part.getMeasureAt(new Point2D.Double(xIn, slurEnd.getY()), staff);
 
         if (endMeasure != sideMeasure) {
             logger.debug("{} orphan side not in part side measure", slur);

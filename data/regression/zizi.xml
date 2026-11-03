@@ -12,11 +12,11 @@
       <supports type="yes" element="beam"></supports>
       <supports type="yes" element="stem"></supports>
       <software>ProxyMusic 4.0.3</software>
-      <encoding-date>2026-11-02</encoding-date>
+      <encoding-date>2026-11-03</encoding-date>
     </encoding>
-    <source>D:\sources\audiveris\data\regression\zizi.png</source>
+    <source>C:\Users\Mihai\AppData\Local\Temp\xml-export-8830638141935280628\zizi.png</source>
     <miscellaneous>
-      <miscellaneous-field name="source-file">D:\sources\audiveris\data\regression\zizi.png</miscellaneous-field>
+      <miscellaneous-field name="source-file">C:\Users\Mihai\AppData\Local\Temp\xml-export-8830638141935280628\zizi.png</miscellaneous-field>
       <miscellaneous-field name="source-sheet-1">1 2</miscellaneous-field>
     </miscellaneous>
   </identification>
@@ -996,7 +996,7 @@
         <duration>4</duration>
         <voice>5</voice>
         <type>quarter</type>
-        <stem default-y="-15">up</stem>
+        <stem default-y="-14">up</stem>
         <staff>2</staff>
       </note>
       <note default-x="76">
@@ -1227,6 +1227,9 @@
         <staff>1</staff>
         <beam number="1">end</beam>
         <beam number="2">backward hook</beam>
+        <notations>
+          <slur type="start" number="1" placement="below" default-x="11" default-y="-38" bezier-x="26" bezier-y="-4"></slur>
+        </notations>
       </note>
       <note default-x="82">
         <pitch>
@@ -1241,9 +1244,6 @@
         <stem default-y="13">up</stem>
         <staff>1</staff>
         <beam number="1">begin</beam>
-        <notations>
-          <slur type="start" number="1" placement="below" default-x="25" default-y="-39" bezier-x="27" bezier-y="-2"></slur>
-        </notations>
       </note>
       <note default-x="113">
         <pitch>
@@ -1283,7 +1283,7 @@
         <staff>1</staff>
         <beam number="1">end</beam>
         <notations>
-          <slur type="stop" number="1" default-x="-12" default-y="-38" bezier-x="-27" bezier-y="-3"></slur>
+          <slur type="stop" number="1" default-x="-5" default-y="-34" bezier-x="-26" bezier-y="-9"></slur>
         </notations>
       </note>
       <note default-x="211">

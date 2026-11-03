@@ -358,6 +358,37 @@ public class SlurInter
         return res;
     }
 
+    //-----------------//
+    // canStayAbnormal //
+    //-----------------//
+    /**
+     * {@inheritDoc}
+     * <p>
+     * A good slur may stay an orphan on a system side, the slur which continues it across
+     * the system break may just have been missed.
+     *
+     * @see #discardOrphans(List, HorizontalSide)
+     */
+    @Override
+    public boolean canStayAbnormal ()
+    {
+        if (isManual() || (getGrade() < constants.minLoneOrphanGrade.getValue())) {
+            return isManual();
+        }
+
+        if ((getHead(LEFT) == null) && (getExtension(LEFT) == null) && !isBeginningOrphan.test(
+                this)) {
+            return false;
+        }
+
+        if ((getHead(RIGHT) == null) && (getExtension(RIGHT) == null) && !isEndingOrphan.test(
+                this)) {
+            return false;
+        }
+
+        return true;
+    }
+
     //---------------//
     // checkAbnormal //
     //---------------//
@@ -1095,7 +1126,11 @@ public class SlurInter
     // discardOrphans //
     //----------------//
     /**
-     * Discard every orphan left over, unless it's a manual one.
+     * Discard every orphan left over, unless it's a manual one or a good one.
+     * <p>
+     * An orphan slur goes beyond its system, it must connect to an orphan slur on the other side
+     * of the system break. But this other part may have been missed, typically when it crosses
+     * staff lines and bar lines, so a well-shaped orphan is kept on its own.
      *
      * @param orphans the orphan slurs left over
      * @param side    side of missing connection
@@ -1108,7 +1143,8 @@ public class SlurInter
                 logger.info("VIP could not {}-connect {}", side, slur);
             }
 
-            if (!slur.isManual()) {
+            // A well-shaped orphan is kept, its counterpart may just have been missed
+            if (!slur.isManual() && (slur.getGrade() < constants.minLoneOrphanGrade.getValue())) {
                 slur.remove();
             }
         }
@@ -1125,6 +1161,10 @@ public class SlurInter
         private final Scale.Fraction maxDeltaY = new Scale.Fraction(
                 4,
                 "Maximum vertical difference in interlines between connecting slurs");
+
+        private final Constant.Ratio minLoneOrphanGrade = new Constant.Ratio(
+                0.65,
+                "Minimum grade to keep an orphan slur that connects to no other slur");
 
         private final Constant.Integer maxTieDeltaMeasureID = new Constant.Integer(
                 "none",

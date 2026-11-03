@@ -311,11 +311,20 @@ public class SlursBuilder
         }
 
         // Distance to model
-        if (dist > params.maxSlurDistance) {
+        // A long slur, often drawn thick, gets more room around its model, with a low impact
+        final List<Point> slurPoints = slur.getPoints();
+        final boolean isLong = abs(slurPoints.get(slurPoints.size() - 1).x - slurPoints.get(0).x)
+                >= params.minLongSlurWidth;
+
+        if (dist > (isLong ? params.maxLongSlurDistance : params.maxSlurDistance)) {
             return null;
         }
 
         double distImpact = 1 - (dist / params.maxSlurDistance);
+
+        if (isLong) {
+            distImpact = Math.max(distImpact, constants.minLongSlurDistImpact.getValue());
+        }
 
         // Max arc angle value
         Circle circle = ((CircleModel) global).getCircle();
@@ -1122,6 +1131,18 @@ public class SlursBuilder
                 0.1,
                 "Maximum circle distance for private final slur");
 
+        private final Scale.Fraction maxLongSlurDistance = new Scale.Fraction(
+                0.15,
+                "Maximum circle distance for a long slur");
+
+        private final Scale.Fraction minLongSlurWidth = new Scale.Fraction(
+                6.0,
+                "Minimum width for a long slur");
+
+        private final Constant.Ratio minLongSlurDistImpact = new Constant.Ratio(
+                0.05,
+                "Minimum distance impact for a long slur");
+
         private final Scale.Fraction maxExtDistance = new Scale.Fraction(
                 0.45,
                 "Maximum circle distance for extension arc");
@@ -1227,6 +1248,10 @@ public class SlursBuilder
 
         final double maxSlurDistance;
 
+        final double maxLongSlurDistance;
+
+        final int minLongSlurWidth;
+
         final double maxExtDistance;
 
         final double maxArcsDistance;
@@ -1274,6 +1299,8 @@ public class SlursBuilder
             maxStaffLineDy = scale.toPixelsDouble(constants.maxStaffLineDy);
             maxIncidence = toRadians(constants.maxIncidence.getValue());
             maxSlurDistance = scale.toPixelsDouble(constants.maxSlurDistance);
+            maxLongSlurDistance = scale.toPixelsDouble(constants.maxLongSlurDistance);
+            minLongSlurWidth = scale.toPixels(constants.minLongSlurWidth);
             maxExtDistance = scale.toPixelsDouble(constants.maxExtDistance);
             maxArcsDistance = scale.toPixelsDouble(constants.maxArcsDistance);
             minSeedCircleRadius = scale.toPixelsDouble(constants.minSeedCircleRadius);
