@@ -396,12 +396,12 @@ public class ShapeChecker
                     case -13, -9, -5, -1, 3, 7, 11, 15 -> {
                         eval.shape = Shape.HALF_REST; // Standard pitch: -0.5
 
-                        return true;
+                        return checkBody(system, eval, glyph, (p2 + 1) / 2.0, false);
                     }
                     case -15, -11, -7, -3, 1, 5, 9, 13 -> {
                         eval.shape = Shape.WHOLE_REST; // Standard pitch: -1.5
 
-                        return true;
+                        return checkBody(system, eval, glyph, (p2 - 1) / 2.0, true);
                     }
                     default -> {
                         eval.failure = new Evaluation.Failure("pitch");
@@ -409,6 +409,87 @@ public class ShapeChecker
                         return false;
                     }
                 }
+            }
+
+            /**
+             * Check that the measure-rest candidate is as wide as a rest, and that its body,
+             * out of the line it hangs from (whole) or sits on (half), is a block: a few rows
+             * as wide as the widest one, starting from the line.
+             * <p>
+             * A piece of slur or tie merged with a staff line can look like such a rest, but its
+             * part out of the line tapers right away, row after row, toward the curve end, or it
+             * is too narrow.
+             *
+             * @param system    containing system
+             * @param eval      evaluation, to be updated with failure if any
+             * @param glyph     the candidate glyph
+             * @param linePitch pitch of the line the rest is stuck to
+             * @param hanging   true for a rest hanging below the line (whole), false for a rest
+             *                  sitting on the line (half)
+             * @return true if OK
+             */
+            private boolean checkBody (SystemInfo system,
+                                       Evaluation eval,
+                                       Glyph glyph,
+                                       double linePitch,
+                                       boolean hanging)
+            {
+                final Rectangle box = glyph.getBounds();
+                final Scale scale = system.getSheet().getScale();
+
+                if (box.width < scale.toPixels(constants.minRestWidth)) {
+                    eval.failure = new Evaluation.Failure("narrow");
+
+                    return false;
+                }
+
+                final Point2D center = glyph.getCenter2D();
+                final Staff staff = system.getClosestStaff(center);
+                final double yLine = staff.pitchToOrdinate(center.getX(), linePitch);
+                final double halfLine = scale.getMaxFore() / 2.0;
+
+                // Widths of rows out of the line, from the line outward
+                final int yFirst = hanging ? (int) Math.ceil(yLine + halfLine)
+                        : (int) Math.floor(yLine - halfLine);
+                final int dir = hanging ? 1 : -1;
+                final List<Integer> widths = new ArrayList<>();
+
+                for (int y = yFirst; (y >= box.y) && (y < (box.y + box.height)); y += dir) {
+                    int xMin = -1;
+                    int xMax = -1;
+
+                    for (int x = box.x; x < (box.x + box.width); x++) {
+                        if (glyph.contains(new Point(x, y))) {
+                            if (xMin == -1) {
+                                xMin = x;
+                            }
+
+                            xMax = x;
+                        }
+                    }
+
+                    widths.add((xMin == -1) ? 0 : (xMax - xMin + 1));
+                }
+
+                // The body is made of the rows almost as wide as the widest one
+                final int maxWidth = widths.stream().mapToInt(Integer::intValue).max().orElse(0);
+                int bodyRows = 0;
+
+                for (int width : widths) {
+                    if (width < (constants.minRestBodyRatio.getValue() * maxWidth)) {
+                        break;
+                    }
+
+                    bodyRows++;
+                }
+
+                if (bodyRows < scale.toPixelsDouble(constants.minRestBodyHeight)) {
+                    eval.failure = new Evaluation.Failure("tapered");
+
+                    return false;
+                }
+
+                return true;
             }
 
             /**
@@ -1045,6 +1126,18 @@ public class ShapeChecker
         private final Scale.Fraction maxGapToStaff = new Scale.Fraction(
                 8.0,
                 "Maximum vertical gap between a note-like glyph and closest staff");
+
+        private final Scale.Fraction minRestWidth = new Scale.Fraction(
+                1.0,
+                "Minimum width of a measure-rest");
+
+        private final Constant.Ratio minRestBodyRatio = new Constant.Ratio(
+                0.9,
+                "Minimum width of a measure-rest body row, as ratio of its widest row");
+
+        private final Scale.Fraction minRestBodyHeight = new Scale.Fraction(
+                0.12,
+                "Minimum height of a measure-rest body, out of its line");
 
         private final Scale.Fraction measureRestDx = new Scale.Fraction(
                 0.2,
